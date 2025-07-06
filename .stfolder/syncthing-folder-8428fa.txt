@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: vkmbu-kcamr
+created: 2025-07-02T17:52:00+03:00

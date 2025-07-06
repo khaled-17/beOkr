@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Tasks Integration</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4A88C5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #tasks {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Google Tasks</h1>
+  <button onclick="handleAuthClick()">Login with Google</button>
+  <div id="tasks"></div>
+
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script>
+    const CLIENT_ID = "62002030463-hja9jflar39g9sa68imon5992hd9f6cs.apps.googleusercontent.com";
+    const API_KEY = "YOUR_API_KEY_HERE"; // استبدلها بمفتاح API بتاعك من Google Cloud
+    const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest"];
+    const SCOPES = "https://www.googleapis.com/auth/tasks.readonly";
+
+    let isGapiReady = false;
+
+    function handleClientLoad() {
+      gapi.load("client:auth2", initClient);
+    }
+
+    function initClient() {
+      gapi.client.init({
+        apiKey: API_KEY,
+        clientId: CLIENT_ID,
+        discoveryDocs: DISCOVERY_DOCS,
+        scope: SCOPES,
+      }).then(() => {
+        isGapiReady = true;
+        console.log("✅ Google API ready");
+      });
+    }
+
+    function handleAuthClick() {
+      if (!isGapiReady) {
+        alert("Please wait... Google API is still loading.");
+        return;
+      }
+
+      const authInstance = gapi.auth2.getAuthInstance();
+      if (!authInstance) {
+        alert("Auth instance not ready. Try again in a moment.");
+        return;
+      }
+
+      authInstance.signIn().then(() => {
+        listTasks();
+      });
+    }
+
+    function listTasks() {
+      gapi.client.tasks.tasks.list({
+        tasklist: "@default"
+      }).then(response => {
+        const tasks = response.result.items || [];
+        const container = document.getElementById("tasks");
+        container.innerHTML = "<h3>Your Tasks:</h3>";
+        if (tasks.length > 0) {
+          tasks.forEach(task => {
+            const div = document.createElement("div");
+            div.textContent = `✔️ ${task.title}`;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML += "No tasks found.";
+        }
+      });
+    }
+
+    handleClientLoad();
+  </script>
+</body>
+</html>

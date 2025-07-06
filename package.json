@@ -1,0 +1,23 @@
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "description": "Simple Node.js project using nodemon",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "Khaled",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "googleapis": "^150.0.1",
+    "open": "^10.1.2",
+    "socket.io": "^4.8.1"
+  }
+}
