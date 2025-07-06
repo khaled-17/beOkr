@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 // بيانات OAuth2 من ملف .env
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI||'http://localhost:3000/oauth2callback';
 const TOKEN_PATH = process.env.TOKEN_PATH || 'tokens.json';
 
  
