@@ -1,42 +1,40 @@
 const express = require('express');
 const { google } = require('googleapis');
-const fs = require('fs');
-require('dotenv').config(); // ✅ تحميل المتغيرات
+const { Redis } = require('@upstash/redis');
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// بيانات OAuth2 من ملف .env
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI||'http://localhost:3000/oauth2callback';
-const TOKEN_PATH = process.env.TOKEN_PATH || 'tokens.json';
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
- 
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
- 
-// ✅ تحميل التوكن من ملف إن وجد
-if (fs.existsSync(TOKEN_PATH)) {
-  const savedTokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
-  oAuth2Client.setCredentials(savedTokens);
-  console.log('✅ Loaded saved tokens from file');
-}
 
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+(async () => {
+  const savedTokens = await redis.get('google_tokens');
+  if (savedTokens) {
+    oAuth2Client.setCredentials(savedTokens);
+    console.log('✅ Loaded saved tokens from Redis');
+  }
+})();
 
 app.use(express.urlencoded({ extended: true }));
 
-
-// 🟢 الصفحة الرئيسية - رابط تسجيل الدخول
 app.get('/', (req, res) => {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/tasks'],
   });
-
   res.send(`<a href="${authUrl}">🔐 Login with Google to access your tasks</a>`);
 });
 
-// 🟢 صفحة الرد بعد الموافقة
 app.get('/oauth2callback', async (req, res) => {
   const code = req.query.code;
 
@@ -44,17 +42,19 @@ app.get('/oauth2callback', async (req, res) => {
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
-    // ✅ خزّن التوكن في ملف
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
+    await redis.set('google_tokens', tokens, { ex: 60 * 60 * 24 * 7 }); // يخزن التوكن لمدة أسبوع
 
     res.send(`
       ✅ Authentication successful!<br>
       <a href="/tasks">📋 View my tasks</a>
     `);
   } catch (err) {
-    res.send('❌ Authentication failed: ' + err.message);
+    res.send('❌ Authentication s failed: ' + err.message);
   }
 });
+
+ 
+
 
 
 

@@ -19,3 +19,4 @@ build/
 Thumbs.db
 tokens.json 
 tokens.json 
+.vercel
